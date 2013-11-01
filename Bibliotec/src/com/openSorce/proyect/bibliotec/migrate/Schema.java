@@ -41,7 +41,7 @@ public class Schema extends HashMap<String, String>{
 						+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
 						+ "name varchar(50),"
 						+ "description text,"
-						+ "code varchar(255),"
+						+ "code TEXT,"
 						+ "create_at datetime,"
 						+ "update_at datetime"
 						+ ");");
@@ -73,7 +73,7 @@ public class Schema extends HashMap<String, String>{
 				+ "update_at datetime,"
 				+ "FOREIGN KEY (person_id) REFERENCES people(id)"
 				+ ");");		
-		// Category
+		// Category +
 		put("Categories", "create table categories("
 				+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
 				+ "name varchar(100),"
@@ -81,7 +81,7 @@ public class Schema extends HashMap<String, String>{
 				+ "create_at datetime,"
 				+ "update_at datetime"
 				+ ");");
-		// Book
+		// Book +
 		put("Books", "create table books("
 				+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
 				+ "title varchar(100),"
@@ -97,7 +97,7 @@ public class Schema extends HashMap<String, String>{
 				+ "FOREIGN KEY (author_id) REFERENCES authors(id),"
 				+ "FOREIGN KEY (book_id) REFERENCES books(id)"
 				+ ");");
-		// Book_Category
+		// Book_Category +
 		put("Books_Categories", "create table books_categories("
 				+ "book_id INTEGER,"
 				+ "category_id INTEGER,"

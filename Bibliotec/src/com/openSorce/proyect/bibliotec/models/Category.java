@@ -47,7 +47,7 @@ public class Category extends AbstractModel {
 	public boolean save() {
 		String sql = "";
 		if(isNew()) sql = "insert into categories(name, alias, create_at, update_at) values (?, ?, ?, ?)";
-		else sql = "update books set name = ?, alias = ?, create_at = ?, update_at = ?";
+		else sql = "update categories set name = ?, alias = ?, create_at = ?, update_at = ?";
 		try{
 			PreparedStatement prepareStatement = AbstractConnection.getConnection().executePrepareStatement(sql);
 			prepareStatement.setString(1, this.name);
@@ -59,13 +59,27 @@ public class Category extends AbstractModel {
 			if(result && isNew()) afterSave(); return true;
 		}catch(Exception e){e.printStackTrace(); return false;}
 	}
-
+	private void makeBookTransaction(String sql, int bookId){
+		try{			
+			PreparedStatement prepareStatement = AbstractConnection.getConnection().executePrepareStatement(sql);
+			prepareStatement.setInt(1, this.getId());
+			prepareStatement.setInt(2, bookId);
+			prepareStatement.addBatch();
+			prepareStatement.executeBatch();
+		}catch(Exception e){e.printStackTrace();}
+	}
+	public void addBook(Book book){
+		makeBookTransaction("insert into books_categories(category_id, book_id) values(?, ?);", book.getId());
+	}
+	public void removeBook(Book book){
+		makeBookTransaction("delete from books_categories where category_id= ? AND book_id= ?;", book.getId());
+	}
 	@Override
 	public boolean destroy() {
 		try{
 			AbstractConnection.getConnection().executeUpdate("delete from categories where id=" + id +"");			
 		}catch(Exception e){e.printStackTrace();}
-		return false;
+		return true;
 	}
 	private static Category find(String sql, Category category){
 		try {
@@ -103,7 +117,7 @@ public class Category extends AbstractModel {
 	}
 	@Override
 	public String atributes() {
-		return "id: " + id + "Name: " + name + "Alias: " + alias + " Created_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getCreateAt()) + " update_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getUpdateAt());
+		return "id: " + id + " Name: " + name +  "Alias: " + alias + " Created_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getCreateAt()) + " update_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getUpdateAt());
 	}
 	@Override
 	public void afterSave() {

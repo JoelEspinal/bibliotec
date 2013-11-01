@@ -68,13 +68,27 @@ public class Book extends AbstractModel {
 			if(result && isNew()) afterSave(); return true;
 		}catch(Exception e){e.printStackTrace(); return false;}
 	}
-
+	private void makeCategoryTransaction(String sql, int categoryId){
+		try{			
+			PreparedStatement prepareStatement = AbstractConnection.getConnection().executePrepareStatement(sql);
+			prepareStatement.setInt(1, this.getId());
+			prepareStatement.setInt(2, categoryId);
+			prepareStatement.addBatch();
+			prepareStatement.executeBatch();
+		}catch(Exception e){e.printStackTrace();}		
+	}
+	public void addCategory(Category category){
+		makeCategoryTransaction("insert into books_categories(book_id, category_id) values(?, ?);", category.getId());
+	}
+	public void removeCategory(Category category){
+		makeCategoryTransaction("delete from books_categories where book_id= ? AND category_id= ?;", category.getId());
+	}
 	@Override
 	public boolean destroy() {
 		try{
 			AbstractConnection.getConnection().executeUpdate("delete from books where id=" + id +"");			
 		}catch(Exception e){e.printStackTrace();}
-		return false;
+		return true;
 	}
 	private static Book find(String sql, Book book){
 		try {
