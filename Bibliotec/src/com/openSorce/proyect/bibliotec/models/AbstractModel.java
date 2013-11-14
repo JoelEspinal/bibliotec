@@ -1,7 +1,7 @@
 package com.openSorce.proyect.bibliotec.models;
 
 public abstract class AbstractModel {
-	public int id;
+	protected int id;
 	
 	public int getId(){
 		return id;

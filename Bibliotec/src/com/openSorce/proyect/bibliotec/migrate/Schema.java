@@ -36,7 +36,7 @@ public class Schema extends HashMap<String, String>{
 				+ "update_at datetime,"
 				+ "FOREIGN KEY (person_id) REFERENCES people(id)"
 				+ ");");
-		// Permissions
+		// Permissions -
 		put("Permissions", "create table permissions("
 						+ "id INTEGER PRIMARY KEY AUTOINCREMENT,"
 						+ "name varchar(50),"

@@ -38,16 +38,17 @@ public class SQLite extends AbstractConnection{
 		try{
 			SQLite conn = null;
 			conn = SQLite.getInstance();
-			conn.executeUpdate(new ArrayList<>(schema.values()));			
+			conn.executeUpdate(new ArrayList<String>(schema.values()));			
 		}catch(Exception e){e.printStackTrace();}
 	}
 	@Override
 	public ResultSet executeQuery(String sql)throws Exception{
 		System.out.println(sql);
-		return startConnection().createStatement().executeQuery(sql);
+		return startConnection().createStatement().executeQuery(sql);		
 	}
 	@Override
 	public boolean executeUpdate(String sql)throws Exception{
+		System.out.println(sql);
 		startConnection().createStatement().executeUpdate(sql);
 		return true;
 	}

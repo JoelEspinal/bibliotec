@@ -12,10 +12,10 @@ import com.openSorce.proyect.bibliotec.connections.AbstractConnection;
 public class Book extends AbstractModel {
 
 	private String title;
+	private int stock;
 	private Date publicationDate = new Date();
 	private Date createAt = new Date();
 	private Date updateAt = new Date();
-	private int stock;
 	
 	public Book(){
 		
@@ -54,81 +54,87 @@ public class Book extends AbstractModel {
 	@Override
 	public boolean save() {
 		String sql = "";
-		if(isNew()) sql = "insert into books(title, publication_date, stock, create_at, update_at) values (?, ?, ?, ?, ?)";
-		else sql = "update books set title = ?, publication_date = ?, stock = ?, create_at = ?, update_at = ?";
+		if(isNew()) sql = "insert into books(title, publication_date, stock, create_at, update_at) values (?, ?, ?, ?, ?);";
+		else sql = "update books set title = ?, publication_date = ?, stock = ?, create_at = ?, update_at = ?;";
 		try{
 			PreparedStatement prepareStatement = AbstractConnection.getConnection().executePrepareStatement(sql);
 			prepareStatement.setString(1, this.title);
 			prepareStatement.setString(2, new SimpleDateFormat("yyyy-MM-dd").format(publicationDate).toString());
 			prepareStatement.setInt(3, this.stock);
-			if(isNew()){prepareStatement.setString(4, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(createAt).toString());}
-			prepareStatement.setString(5, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(createAt).toString());
+			if(isNew()){prepareStatement.setString(4, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(new Date()).toString());}
+			else prepareStatement.setString(4, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(createAt).toString());
+			prepareStatement.setString(5, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(new Date()).toString());
 			prepareStatement.addBatch();
 			boolean result = prepareStatement.executeBatch().length > 0;
 			if(result && isNew()) afterSave(); return true;
 		}catch(Exception e){e.printStackTrace(); return false;}
 	}
-	private void makeCategoryTransaction(String sql, int categoryId){
+	protected void makeTransaction(String sql, int categoryId){
 		try{			
 			PreparedStatement prepareStatement = AbstractConnection.getConnection().executePrepareStatement(sql);
 			prepareStatement.setInt(1, this.getId());
 			prepareStatement.setInt(2, categoryId);
 			prepareStatement.addBatch();
 			prepareStatement.executeBatch();
-		}catch(Exception e){e.printStackTrace();}		
+		}catch(Exception e){e.printStackTrace();}
 	}
 	public void addCategory(Category category){
-		makeCategoryTransaction("insert into books_categories(book_id, category_id) values(?, ?);", category.getId());
+		makeTransaction("insert into books_categories(book_id, category_id) values(?, ?);", category.getId());
 	}
 	public void removeCategory(Category category){
-		makeCategoryTransaction("delete from books_categories where book_id= ? AND category_id= ?;", category.getId());
+		makeTransaction("delete from books_categories where book_id= ? AND category_id= ?;", category.getId());
 	}
 	@Override
 	public boolean destroy() {
 		try{
-			AbstractConnection.getConnection().executeUpdate("delete from books where id=" + id +"");			
-		}catch(Exception e){e.printStackTrace();}
+			AbstractConnection.getConnection().executeUpdate("delete from books where id=" + id +";");			
+		}catch(Exception e){e.printStackTrace(); return false;}
 		return true;
 	}
-	private static Book find(String sql, Book book){
+	protected static Book find(String sql, Book book){
 		try {
 			ResultSet result = AbstractConnection.getConnection().executeQuery(sql);
-			book.id = result.getInt("id");
-			book.title = result.getString("title");
-			book.publicationDate = result.getDate("publication_date");
-			book.stock = result.getInt("stock");
-			book.publicationDate = new SimpleDateFormat("MM-dd-yyyy").parse(result.getDate("publication_date").toString());
-			book.createAt = new SimpleDateFormat("MM-dd-yyyy").parse(result.getDate("create_at").toString());
-			book.updateAt = new SimpleDateFormat("MM-dd-yyyy").parse(result.getDate("update_at").toString());
+			while(result.next()){
+				book.id = result.getInt("id");
+				book.title = result.getString("title");
+				book.publicationDate = result.getDate("publication_date");
+				book.stock = result.getInt("stock");
+				
+				book.publicationDate = result.getDate("publication_date");
+				book.createAt = result.getDate("create_at");
+				book.updateAt = result.getDate("update_at");
+				//book.publicationDate = new SimpleDateFormat("MM-dd-yyyy").parse(new java.util.Date(result.getDate("publication_date").getTime()).toString());
+				//book.createAt = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").parse(new java.util.Date(result.getDate("create_at").getTime()).toString());
+				//book.updateAt = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").parse(new java.util.Date(result.getDate("update_at").getTime()).toString());				
+			}
 		} catch (Exception e) {	e.printStackTrace();}
 		return book;
 	}
 	public static Book find(int id){
-		return find("select * from books where id=" + id +"", new Book());
+		return find("select * from books where id=" + id +";", new Book());
 	}
 	public static Book find(String title){
-		return find("select * from books where title="+ title, new Book());
+		return find("select * from books where title=" +"'" + title  +"';", new Book());
 	}
 	public static List<com.openSorce.proyect.bibliotec.models.Book> getAll(){
 		List<com.openSorce.proyect.bibliotec.models.Book> books = new ArrayList<com.openSorce.proyect.bibliotec.models.Book>();
 		ResultSet result = null;
 		try{
-			result = AbstractConnection.getConnection().executeQuery("select count(id) from books");
-			result.next();
-			int count = result.getInt(1);
-			System.out.println("Count: " + count);
-			for(int i=0; i < count; i++){
-				System.out.println("Iterator: " + i);
-				result = AbstractConnection.getConnection().executeQuery("select id from books limit 1 offset " + i);				
+			result = AbstractConnection.getConnection().executeQuery("select count(id) from books;");			
+			while(result.next()){
+				int count = result.getInt(1);
+				for(int i=0; i < count; i++){
+				result = AbstractConnection.getConnection().executeQuery("select id from books limit 1 offset " + i + ";");				
 				books.add(find(result.getInt(1)));
-				result.next();
-			}			
+				result.next();				
+			}
+		}			
 		}catch(Exception e){e.printStackTrace();}
 		return books;
 	}
 	@Override
 	public String atributes() {
-		return "id: " + this.getId() + " title: " + title + ", publication_date" + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getPublicationDate()) + " stock: " + stock + " Created_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getCreateAt()) + " update_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getUpdateAt());
+		return "[id: " + this.id + " title: " + title + ", publication_date: " + new SimpleDateFormat("MMM-dd-yyyy").format(publicationDate) ; // + " stock: " + stock + " Created_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getCreateAt()) + " update_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getUpdateAt() + "]");
 	}
 	@Override
 	public void afterSave() {				
@@ -139,7 +145,7 @@ public class Book extends AbstractModel {
 	}
 	@Override
 	public String toString() {
-		return getTitle();
+		return this.title;
 	}
 	@Override
 	public boolean equals(Object obj) {
