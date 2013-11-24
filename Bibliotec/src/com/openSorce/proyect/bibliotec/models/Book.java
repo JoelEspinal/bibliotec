@@ -8,14 +8,15 @@ import java.util.Date;
 import java.util.List;
 
 import com.openSorce.proyect.bibliotec.connections.AbstractConnection;
+import com.openSorce.proyect.bibliotec.utils.DateUtil;
 
 public class Book extends AbstractModel {
 
 	private String title;
 	private int stock;
-	private Date publicationDate = new Date();
-	private Date createAt = new Date();
-	private Date updateAt = new Date();
+	private Date publicationDate;
+	private Date createAt;
+	private Date updateAt;
 	
 	public Book(){
 		
@@ -59,11 +60,11 @@ public class Book extends AbstractModel {
 		try{
 			PreparedStatement prepareStatement = AbstractConnection.getConnection().executePrepareStatement(sql);
 			prepareStatement.setString(1, this.title);
-			prepareStatement.setString(2, new SimpleDateFormat("yyyy-MM-dd").format(publicationDate).toString());
+			prepareStatement.setString(2, DateUtil.stringify(publicationDate));
 			prepareStatement.setInt(3, this.stock);
-			if(isNew()){prepareStatement.setString(4, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(new Date()).toString());}
-			else prepareStatement.setString(4, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(createAt).toString());
-			prepareStatement.setString(5, new SimpleDateFormat("yyyy-MM-dd HH:MM:SS").format(new Date()).toString());
+			if(isNew()){prepareStatement.setString(4, DateUtil.stringify(new Date()));}
+			else prepareStatement.setString(4, DateUtil.stringify(createAt));
+			prepareStatement.setString(5, DateUtil.stringify(new Date()));
 			prepareStatement.addBatch();
 			boolean result = prepareStatement.executeBatch().length > 0;
 			if(result && isNew()) afterSave(); return true;
@@ -103,9 +104,9 @@ public class Book extends AbstractModel {
 				book.publicationDate = result.getDate("publication_date");
 				book.createAt = result.getDate("create_at");
 				book.updateAt = result.getDate("update_at");
-				//book.publicationDate = new SimpleDateFormat("MM-dd-yyyy").parse(new java.util.Date(result.getDate("publication_date").getTime()).toString());
-				//book.createAt = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").parse(new java.util.Date(result.getDate("create_at").getTime()).toString());
-				//book.updateAt = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").parse(new java.util.Date(result.getDate("update_at").getTime()).toString());				
+				book.publicationDate = DateUtil.toFormat(result.getTimestamp("publication_date"));
+				book.createAt = DateUtil.toFormat(result.getTimestamp("create_at"));
+				book.updateAt = DateUtil.toFormat(result.getTimestamp("update_at"));				
 			}
 		} catch (Exception e) {	e.printStackTrace();}
 		return book;
@@ -134,7 +135,9 @@ public class Book extends AbstractModel {
 	}
 	@Override
 	public String atributes() {
-		return "[id: " + this.id + " title: " + title + ", publication_date: " + new SimpleDateFormat("MMM-dd-yyyy").format(publicationDate) ; // + " stock: " + stock + " Created_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getCreateAt()) + " update_at: " + new SimpleDateFormat("MMM-dd-yyyy HH:mm:ss").format(getUpdateAt() + "]");
+		try {
+			return "[id: " + this.id + " title: " + title + ", publication_date: " + DateUtil.toFormat(getCreateAt()) + " update_at: " + DateUtil.toFormat(getUpdateAt()) + "]";
+		} catch (Exception e) {e.printStackTrace(); return "None";}
 	}
 	@Override
 	public void afterSave() {				
