@@ -136,7 +136,7 @@ public class Book extends AbstractModel {
 	@Override
 	public String atributes() {
 		try {
-			return "[id: " + this.id + " title: " + title + ", publication_date: " + DateUtil.toFormat(getCreateAt()) + " update_at: " + DateUtil.toFormat(getUpdateAt()) + "]";
+			return "[id: " + this.id + " title: " + title + ", publication_date: " + DateUtil.Calendarize(getCreateAt()) + " update_at: " + DateUtil.Calendarize(getUpdateAt()) + "]";
 		} catch (Exception e) {e.printStackTrace(); return "None";}
 	}
 	@Override
